@@ -64,9 +64,13 @@ integrate_one () {
         slow_fast_beam_centre="$BEAM_CENTRE"\
         geometry.scan.oscillation=0,0.0652\
         goniometer.axis="$AXIS"
-    dials.find_spots imported.expt kernel_size=9,9 min_spot_size=8\
-        gain=0.8 d_max=15
-    dials.index imported.expt strong.refl\
+    dials.generate_mask imported.expt \
+        untrusted.rectangle=0,516,255,261\
+        untrusted.rectangle=255,261,0,516
+    dials.apply_mask imported.expt mask=pixels.mask
+    dials.find_spots masked.expt\
+        gain=0.7 d_max=12 d_min=1 min_spot_size=6
+    dials.index masked.expt strong.refl\
         beam.fix=all goniometer.fix=None detector.fix=distance\
         unit_cell=8.0150,10.015,17.703,90,90,90 space_group=P212121\
         index_assignment.method="$IDX_ASSN_METHOD"
@@ -95,6 +99,12 @@ scale () {
     mv split_2.refl scaled_3.refl
 }
 
+solve () {
+    dials.export "$PROCDIR"/scaling/scaled.{expt,refl}\
+        format=shelx composition="C H O"
+    shelxt dials > shelxt.log
+}
+
 # IRELOH_ED_Dataset_1
 cd "$PROCDIR"
 mkdir -p IRELOH_ED_Dataset_1-dials
@@ -108,7 +118,7 @@ cd "$PROCDIR"
 mkdir -p IRELOH_ED_Dataset_2-dials
 cd IRELOH_ED_Dataset_2-dials
 TEMPLATE="$DATADIR"/IRELOH_ED_Dataset_2/n14_a006_###.cbf
-integrate_one "$TEMPLATE" 269,270 0.99889,-0.0458683,0.0107261 "simple"
+integrate_one "$TEMPLATE" 269,270 0.99889,-0.0458683,0.0107261 "local"
 cd "$PROCDIR"
 
 # IRELOH_ED_Dataset_3
@@ -116,7 +126,7 @@ cd "$PROCDIR"
 mkdir -p IRELOH_ED_Dataset_3-dials
 cd IRELOH_ED_Dataset_3-dials
 TEMPLATE="$DATADIR"/IRELOH_ED_Dataset_3/n14_a009_####.cbf
-integrate_one "$TEMPLATE" 269,279 -0.999563,0.0274898,-0.0108268 "simple"
+integrate_one "$TEMPLATE" 269,279 -0.999563,0.0274898,-0.0108268 "local"
 cd "$PROCDIR"
 
 # Scaling
@@ -124,4 +134,11 @@ cd "$PROCDIR"
 mkdir -p scaling
 cd scaling
 scale
+cd "$PROCDIR"
+
+# Solve
+cd "$PROCDIR"
+mkdir -p solve
+cd solve
+solve
 cd "$PROCDIR"

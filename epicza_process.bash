@@ -65,9 +65,13 @@ integrate_one () {
         slow_fast_beam_centre="$BEAM_CENTRE"\
         geometry.scan.oscillation="$OSCILLATION"\
         goniometer.axis="$AXIS"
-    dials.find_spots imported.expt kernel_size=9,9 min_spot_size=8\
-        gain="$GAIN" d_max=15
-    dials.index imported.expt strong.refl\
+    dials.generate_mask imported.expt \
+        untrusted.rectangle=0,516,255,261\
+        untrusted.rectangle=255,261,0,516
+    dials.apply_mask imported.expt mask=pixels.mask
+    dials.find_spots masked.expt\
+        gain=0.7 d_max=12 d_min=1 min_spot_size=6
+    dials.index masked.expt strong.refl\
         beam.fix=all goniometer.fix=None detector.fix=distance\
         unit_cell=10.996,12.452,13.218,90,90,90 space_group=P212121
     dials.refine indexed.{expt,refl}\
@@ -97,6 +101,12 @@ scale () {
     mv split_1.refl scaled_2.refl
     mv split_2.refl scaled_3.refl
     mv split_3.refl scaled_4.refl
+}
+
+solve () {
+    dials.export "$PROCDIR"/scaling/scaled.{expt,refl}\
+        format=shelx composition="C H N O S"
+    shelxt dials > shelxt.log
 }
 
 # EPICZA_ED_Dataset_1
@@ -136,4 +146,11 @@ cd "$PROCDIR"
 mkdir -p scaling
 cd scaling
 scale
+cd "$PROCDIR"
+
+# Solve
+cd "$PROCDIR"
+mkdir -p solve
+cd solve
+solve
 cd "$PROCDIR"
